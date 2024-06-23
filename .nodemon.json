@@ -1,0 +1,11 @@
+{
+  "ignore": [
+    "tokens.json",
+    "node_modules/**",
+    "*.test.js",
+    "frontend/**"
+  ],
+  "watch": [
+    "src"
+  ]
+}

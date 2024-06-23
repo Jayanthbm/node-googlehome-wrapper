@@ -28,12 +28,22 @@ const config = {
   },
 };
 
-// Load tokens if they exist
-let tokens = {};
-if (fs.existsSync(config.auth.savedTokensPath)) {
-  tokens = require(config.auth.savedTokensPath);
-  config.auth.tokens = tokens;
-}
+// Helper function to load tokens from file
+const loadTokensFromFile = () => {
+  if (fs.existsSync(config.auth.savedTokensPath)) {
+    try {
+      const tokensData = fs.readFileSync(config.auth.savedTokensPath);
+      return JSON.parse(tokensData);
+    } catch (error) {
+      console.error("Error loading tokens from file:", error);
+      return {};
+    }
+  }
+  return {};
+};
+
+// Load tokens from the file initially
+let tokens = loadTokensFromFile();
 
 // Create an instance of Google Assistant
 const assistant = new GoogleAssistant(config.auth);
@@ -44,7 +54,6 @@ const isTokenExpired = () => {
     return true;
   }
   const now = Date.now();
-  console.log("now", now, "expires_at", tokens.expires_at);
   return now >= tokens.expires_at;
 };
 
@@ -62,6 +71,10 @@ const refreshAccessToken = async () => {
     tokens.expires_at = Date.now() + response.data.expires_in * 1000; // Convert seconds to milliseconds
     fs.writeFileSync(config.auth.savedTokensPath, JSON.stringify(tokens));
     console.log("Access token refreshed successfully.");
+
+    // Reload tokens from the file to ensure they are in sync
+    tokens = loadTokensFromFile();
+
   } catch (error) {
     console.error(
       "Error refreshing access token:",
@@ -75,6 +88,7 @@ const refreshAccessToken = async () => {
 app.use(express.json());
 
 app.use(cors())
+
 // Helper function to generate Google OAuth URL
 const getOAuthUrl = () => {
   const params = {
@@ -155,6 +169,9 @@ const startConversation = async (query) => {
     }
   }
 
+  // Always use the latest tokens
+  config.auth.tokens = tokens;
+
   return new Promise((resolve, reject) => {
     assistant.start(
       { ...config.conversation, textQuery: query },
@@ -171,7 +188,7 @@ const startConversation = async (query) => {
             assistantResponse = showTextContent.trim(); // Store the response
             console.log(
               "Assistant Response (from screen-data):",
-              assistantResponse,
+              assistantResponse
             );
           })
           .on("ended", (error, continueConversation) => {
@@ -191,7 +208,7 @@ const startConversation = async (query) => {
             console.error("Conversation Error:", error);
             reject({ error: "Conversation error occurred" });
           });
-      },
+      }
     );
   });
 };
