@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+
+:root {
+  --background-color: #fefefe;
+  --text-color: #0d0d0d;
+  --header-color: #f0ead6;
+  --header-text-color: #676767;
+  --border-color: #cdcdcd;
+  --button-bg: #3b3b3b;
+  --button-text: #f9f9f9;
+  --button-hover-bg: #4a4a4a;
+  --slider-bg: #ddd;
+  --thumb-bg: #3b3b3b;
+  --thumb-border: #fff;
+  --value-bg: #3b3b3b;
+  --value-color: #fff;
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  --settings-bg: #f0ead6;
+}
+
+.dark-mode {
+  --background-color: #171717;
+  --text-color: #f9f9f9;
+  --border-color: #b8b6ab;
+  --header-color: #3b3b3b;
+  --header-text-color: #cdcdcd;
+  --button-bg: #f0ead6;
+  --button-text: #676767;
+  --button-hover-bg: #f0ead6;
+  --slider-bg: #666;
+  --thumb-bg: #f0ead6;
+  --thumb-border: #3b3b3b;
+  --value-bg: #676767;
+  --value-color: #f0ead6;
+  --box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(255, 255, 255, 0.06);
+  --box-shadow-hover: 0 8px 16px rgba(255, 255, 255, 0.15),
+    0 4px 8px rgba(255, 255, 255, 0.1);
+
+  --settings-bg: #3b3b3b;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  overflow-x: hidden;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+a {
+  color: var(--text-color);
+}
+
+a::visited {
+  color: var(--text-color);
+}
+
+input[type="text"] {
+  -webkit-text-size-adjust: 100%;
+}
