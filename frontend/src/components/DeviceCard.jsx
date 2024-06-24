@@ -84,9 +84,10 @@ const DeviceCard = ({ title, isLoading, status, onReload, children, fetchedAt })
                     duration: 0,
                   });
                   let status = await onReload();
+                  console.log("status", status);
                   if (status) {
                     messageApi.destroy();
-                    message.success(`Refreshed ${title} status successfully`);
+                    message.success(`Refreshed ${title} successfully`);
                   } else {
                     messageApi.destroy();
                     message.error(`Failed to refresh ${title} status`);

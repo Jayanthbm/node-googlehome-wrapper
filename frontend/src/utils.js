@@ -32,6 +32,9 @@ export const formatDeviceConfiguration = (data) => {
 };
 
 export const statusTextGrabber = (text) => {
+  if (!text) {
+    return "OFFLINE";
+  }
   // Convert the input text to lowercase for case-insensitive search
   let lowerCaseText = text.toLowerCase();
 
@@ -66,15 +69,28 @@ export const levelGrabber = (text, maxLevel) => {
   return null;
 };
 
-export const callApi = async (prompt) => {
+export const assistantAPI = async (prompt) => {
+  const backendApiUrl = localStorage.getItem("backendApiUrl");
   try {
-    const backendApiUrl = localStorage.getItem("backendApiUrl");
     let result = await axios.post(backendApiUrl, { query: prompt });
     return result.data.response;
   } catch (error) {
     console.log("Error calling API:", error);
-    // message.error(error.message);
-    return null;
+    if(error?.response?.status == 401){
+      const authURL = backendApiUrl.replace("/query", "/auth/start");
+      window.open(authURL, "_blank");
+      message.destroy("API_ERROR");
+      message.info("Please login to continue");
+      return null;
+    } else {
+      message.destroy("API_ERROR");
+      message.error({
+        content: error.message,
+        key: "API_ERROR",
+      });
+      return null;
+    }
+
   }
 };
 
@@ -134,19 +150,54 @@ export const saveDeviceStatusToStorage = (deviceName, deviceStatus) => {
   }
 }
 
-export const getDeviceStatus = async(deviceName) => {
+export const getDeviceStatus = async (deviceName) => {
   try {
     const deviceStatus = getDeviceStatusFromStorage(deviceName);
     const statusQuery = `Is my ${deviceName} turned on ?`;
-    const statusResult = await callApi(statusQuery);
-    const status = statusTextGrabber(statusResult);
+    let status = "OFFLINE";
+    const statusResult = await assistantAPI(statusQuery);
+    status = statusTextGrabber(statusResult);
+    deviceStatus["lastApiRequestStatus"] = statusResult == null ? false: true;
     deviceStatus["status"] = status;
     deviceStatus["lastFetchedAt"] = Date.now();
     saveDeviceStatusToStorage(deviceName, deviceStatus);
     return deviceStatus;
-
   } catch (error) {
     console.log("Error getting device status:", error);
     return {};
+  }
+};
+
+
+export const toggleDeviceStatus = async (deviceName, currentStatus) => {
+  try {
+    let query;
+    if (currentStatus === "ON") {
+      query = `Turn off my ${deviceName}`;
+    } else {
+      query = `Turn on my ${deviceName}`;
+    }
+    let deviceStatus = getDeviceStatusFromStorage(deviceName);
+    try {
+      const result = await assistantAPI(query);
+      if (result !== null) {
+        message.success(result);
+        deviceStatus["status"] = currentStatus === "ON" ? "OFF" : "ON";
+        deviceStatus["lastFetchedAt"] = Date.now();
+        saveDeviceStatusToStorage(deviceName, deviceStatus);
+
+        return deviceStatus;
+      } else {
+        message.error(`Failed to ${query}. Please try again.`);
+        return deviceStatus
+      }
+
+    } catch (error) {
+      console.log("Error calling API:", error);
+      return deviceStatus;
+    }
+
+  } catch (error) {
+    console.log("Error toggling device status:", error);
   }
 }

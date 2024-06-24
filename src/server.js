@@ -169,6 +169,7 @@ const startConversation = async (query) => {
     }
   }
 
+  let tokens = loadTokensFromFile();
   // Always use the latest tokens
   config.auth.tokens = tokens;
 
@@ -186,10 +187,8 @@ const startConversation = async (query) => {
             const $ = cheerio.load(htmlString);
             const showTextContent = $(".show_text_content").text(); // Extract text from elements with class 'show_text_content'
             assistantResponse = showTextContent.trim(); // Store the response
-            console.log(
-              "Assistant Response (from screen-data):",
-              assistantResponse
-            );
+            console.log("Query:", query);
+            console.log("Assistant Response:", assistantResponse);
           })
           .on("ended", (error, continueConversation) => {
             if (error) {
@@ -205,8 +204,13 @@ const startConversation = async (query) => {
             }
           })
           .on("error", (error) => {
-            console.error("Conversation Error:", error);
-            reject({ error: "Conversation error occurred" });
+            console.error("Conversation Error:", error?.details ? error.details : error);
+            if (error?.code == 16) {
+              reject({ error: "Not Authorized" });
+            } else {
+              reject({ error: "Conversation error occurred" });
+            }
+
           });
       }
     );
@@ -222,7 +226,12 @@ app.post("/query", async (req, res) => {
     res.json(result); // Send the final response back to client
   } catch (error) {
     console.error("Error in conversation:", error);
-    res.status(500).json(error); // Send error response if conversation fails
+    if(error?.error == "Not Authorized"){
+      res.status(401).json({ error: "Not Authorized" });
+    } else {
+      res.status(500).json(error);
+    }
+
   }
 });
 

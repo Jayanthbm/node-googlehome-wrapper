@@ -1,16 +1,17 @@
-import { Card } from "antd";
+import { Card, Divider, Flex } from "antd";
 import React, { useEffect, useState } from "react";
-import { getDeviceStatus, getDeviceStatusFromStorage } from "../utils";
+import {
+  getDeviceStatus,
+  getDeviceStatusFromStorage,
+  toggleDeviceStatus,
+} from "../utils";
 import DeviceCard from "./DeviceCard";
+import ToggleButton from "./ToggleButton";
 const LightComponent = ({ data, forceReload }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("OFFLINE");
   const [loaded, setLoaded] = useState(false);
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
-
-  const resetValues = () => {
-    setStatus("OFFLINE");
-  };
 
   useEffect(() => {
     const deviceStatus = getDeviceStatusFromStorage(data.deviceName);
@@ -27,15 +28,21 @@ const LightComponent = ({ data, forceReload }) => {
     }
   }, [lastFetchedAt, forceReload]);
 
+  const resetValues = () => {
+    setStatus("OFFLINE");
+  };
   const handleRefresh = async () => {
     try {
       setLoading(true);
       resetValues();
       let deviceStatus = await getDeviceStatus(data.deviceName);
-      setStatus(deviceStatus["status"]);
-      setLastFetchedAt(deviceStatus["lastFetchedAt"]);
+      console.log("deviceStatus", deviceStatus);
+      setStatus(deviceStatus["status"] ? deviceStatus["status"] : "OFFLINE");
+      setLastFetchedAt(
+        deviceStatus["lastFetchedAt"] ? deviceStatus["lastFetchedAt"] : null
+      );
       setLoading(false);
-      return true;
+      return deviceStatus["lastApiRequestStatus"];
     } catch (error) {
       console.log("Error");
       setLoading(false);
@@ -49,10 +56,19 @@ const LightComponent = ({ data, forceReload }) => {
     }
   }, [forceReload]);
 
+  const toggleStatus = async () => {
+    setLoading(true);
+    let updatedStatus = await toggleDeviceStatus(data.deviceName, status);
+    setStatus(updatedStatus["status"] ? updatedStatus["status"] : "OFFLINE");
+    setLastFetchedAt(
+      updatedStatus["lastFetchedAt"] ? updatedStatus["lastFetchedAt"] : null
+    );
+    setLoading(false);
+  };
   return (
     <DeviceCard
       title={data.deviceName}
-      isLoading={loading}
+      isLoading={!loaded}
       status={status}
       onReload={handleRefresh}
       fetchedAt={lastFetchedAt}
@@ -60,7 +76,6 @@ const LightComponent = ({ data, forceReload }) => {
       <Card.Grid
         style={{
           width: "30%",
-          textAlign: "center",
         }}
         hoverable={false}
       >
@@ -70,10 +85,21 @@ const LightComponent = ({ data, forceReload }) => {
         hoverable={false}
         style={{
           width: "70%",
-          textAlign: "center",
         }}
       >
-        Content
+        <Flex vertical gap="small">
+          <span style={{ fontWeight: "bold", textAlign: "center" }}>
+            Operations
+          </span>
+          <Flex wrap gap="small">
+            <ToggleButton
+              onToggle={toggleStatus}
+              isLoading={loading}
+              status={status}
+            />
+            <Divider type="vertical" style={{ height: "100px" }} />
+          </Flex>
+        </Flex>
       </Card.Grid>
     </DeviceCard>
   );
