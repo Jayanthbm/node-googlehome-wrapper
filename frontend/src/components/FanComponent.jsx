@@ -1,7 +1,7 @@
 
 import { Card, Divider, Flex, Slider, Typography, message } from "antd";
 import React, { useEffect, useRef, useState } from "react";
-import { assistantAPI, getDeviceStatus, getDeviceStatusFromStorage, saveDeviceStatusToStorage, toggleDeviceStatus } from "../utils";
+import { assistantAPI, getDeviceStatus, getDeviceStatusFromStorage, levelGrabber, saveDeviceStatusToStorage, toggleDeviceStatus } from "../utils";
 import DeviceCard from "./DeviceCard";
 import ToggleButton from "./ToggleButton";
 
@@ -42,9 +42,17 @@ const FanComponent = ({ data, forceReload }) => {
       setLoading(true);
       resetValues();
       let deviceStatus = await getDeviceStatus(data.deviceName);
-      console.log("deviceStatus", deviceStatus)
+      let queryLevelPrompt = `What is my ${data.deviceName} set to?`;
+      let queryLevel = await assistantAPI(queryLevelPrompt);
+      const level = levelGrabber(queryLevel, maxSpeed);
+      deviceStatus["level"] = level;
+      deviceStatus["lastFetchedAt"] = Date.now();
       setStatus(deviceStatus["status"] ? deviceStatus["status"] : 'OFFLINE');
+      setCurrentLevel(level);
+      setDebouncedSpeed(level);
+      setCheckLevel(level);
       setLastFetchedAt(deviceStatus["lastFetchedAt"] ? deviceStatus["lastFetchedAt"] : null);
+      saveDeviceStatusToStorage(data.deviceName, deviceStatus);
       setLoading(false);
       return deviceStatus["lastApiRequestStatus"];
     } catch (error) {
