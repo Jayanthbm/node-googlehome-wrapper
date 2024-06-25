@@ -1,0 +1,30 @@
+{
+  "devices": [
+    {
+      "deviceName": "Fan",
+      "deviceType": "Fan",
+      "maxSpeed": "5",
+      "roomName": "Master Bedroom"
+    },
+    {
+      "deviceName": "Mac Charger",
+      "deviceType": "Outlet",
+      "roomName": "Master Bedroom"
+    },
+    {
+      "deviceName": "Dell Charger",
+      "deviceType": "Outlet",
+      "roomName": "Master Bedroom"
+    },
+    {
+      "deviceName": "Bed Light",
+      "deviceType": "Light",
+      "roomName": "Master Bedroom"
+    },
+    {
+      "deviceName": "Home Mini-1",
+      "deviceType": "Speaker",
+      "roomName": "Master Bedroom"
+    }
+  ]
+}
