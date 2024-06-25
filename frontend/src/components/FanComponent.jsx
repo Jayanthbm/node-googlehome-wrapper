@@ -48,11 +48,11 @@ const FanComponent = ({ data, forceReload }) => {
       setLoading(false);
       return deviceStatus["lastApiRequestStatus"];
     } catch (error) {
-      console.log("Error")
+      console.log("Error");
       setLoading(false);
       return false;
     }
-  }
+  };
 
   useEffect(() => {
     if (forceReload) {
@@ -63,22 +63,24 @@ const FanComponent = ({ data, forceReload }) => {
   const toggleStatus = async () => {
     setLoading(true);
     let updatedStatus = await toggleDeviceStatus(data.deviceName, status);
-    setStatus(updatedStatus["status"] ? updatedStatus["status"] : 'OFFLINE');
-    setLastFetchedAt(updatedStatus["lastFetchedAt"] ? updatedStatus["lastFetchedAt"] : null);
+    setStatus(updatedStatus["status"] ? updatedStatus["status"] : "OFFLINE");
+    setLastFetchedAt(
+      updatedStatus["lastFetchedAt"] ? updatedStatus["lastFetchedAt"] : null
+    );
     setLoading(false);
-  }
+  };
 
-   const handleSpeedChange = (value) => {
-     const speed = value;
-     setCurrentLevel(speed);
-     if (debounceTimeoutRef.current) {
-       clearTimeout(debounceTimeoutRef.current);
-     }
+  const handleSpeedChange = (value) => {
+    const speed = value;
+    setCurrentLevel(speed);
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
 
-     debounceTimeoutRef.current = setTimeout(() => {
-       setDebouncedSpeed(speed);
-     }, 500); // 500ms debounce delay
-   };
+    debounceTimeoutRef.current = setTimeout(() => {
+      setDebouncedSpeed(speed);
+    }, 500); // 500ms debounce delay
+  };
 
   useEffect(() => {
     const updateSpeed = async () => {
@@ -114,7 +116,11 @@ const FanComponent = ({ data, forceReload }) => {
         }}
         hoverable={false}
       >
-        Content
+        <div
+          className={`fan-blades ${
+            status !== "ON" ? "stopped" : `speed-${currentLevel}`
+          }`}
+        ></div>
       </Card.Grid>
       <Card.Grid
         hoverable={false}

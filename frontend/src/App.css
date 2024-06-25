@@ -37,8 +37,8 @@
   color: #ffa500;
 }
 
-.container{
- margin: 1rem;
+.container {
+  margin: 1rem;
 }
 
 .card-grid {
@@ -48,16 +48,62 @@
   padding: 16px;
 }
 
-.on-btn, .on-btn:hover{
+.on-btn,
+.on-btn:hover {
   background-color: #87d068 !important;
   color: white;
 }
-.off-btn, .off-btn:hover{
+.off-btn,
+.off-btn:hover {
   background-color: #f50 !important;
   color: white;
 }
 
-.offline-btn, .offline-btn:hover{
+.offline-btn,
+.offline-btn:hover {
   background-color: #9E9E9E !important;
   color: white;
+}
+
+/* Add this CSS in a relevant CSS or styled-components file */
+/* Existing CSS */
+.fan-blades {
+  width: 100px;
+  height: 100px;
+  background: url('/assets/fan-blades.svg') no-repeat center/contain;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.speed-1 {
+  animation: spin 1.6s linear infinite;
+}
+
+.speed-2 {
+  animation: spin 1.3s linear infinite;
+}
+
+.speed-3 {
+  animation: spin 1s linear infinite;
+}
+
+.speed-4 {
+  animation: spin 0.8s linear infinite;
+}
+
+.speed-5 {
+  animation: spin 0.6s linear infinite;
+}
+
+/* New class to stop animation */
+.stopped {
+  animation: none;
 }
