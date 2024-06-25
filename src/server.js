@@ -7,7 +7,7 @@ const querystring = require("querystring");
 const GoogleAssistant = require("google-assistant");
 const axios = require("axios");
 const cheerio = require("cheerio");
-var cors = require('cors')
+var cors = require("cors");
 const PORT = 2424;
 
 // Load credentials
@@ -46,7 +46,13 @@ const loadTokensFromFile = () => {
 let tokens = loadTokensFromFile();
 
 // Create an instance of Google Assistant
-const assistant = new GoogleAssistant(config.auth);
+let assistant = new GoogleAssistant(config.auth);
+
+// Function to reinitialize Google Assistant with updated tokens
+const reinitializeAssistant = () => {
+  config.auth.tokens = tokens;
+  assistant = new GoogleAssistant(config.auth);
+};
 
 // Function to check if access token is expired
 const isTokenExpired = () => {
@@ -75,10 +81,12 @@ const refreshAccessToken = async () => {
     // Reload tokens from the file to ensure they are in sync
     tokens = loadTokensFromFile();
 
+    // Reinitialize Google Assistant instance with updated tokens
+    reinitializeAssistant();
   } catch (error) {
     console.error(
       "Error refreshing access token:",
-      error.response?.data || error,
+      error.response?.data || error
     );
     throw new Error("Error refreshing access token.");
   }
@@ -86,8 +94,7 @@ const refreshAccessToken = async () => {
 
 // Middleware to parse JSON request body
 app.use(express.json());
-
-app.use(cors())
+app.use(cors());
 
 // Helper function to generate Google OAuth URL
 const getOAuthUrl = () => {
@@ -147,6 +154,12 @@ app.get("/auth/handler", async (req, res) => {
       };
 
       fs.writeFileSync(config.auth.savedTokensPath, JSON.stringify(tokens));
+
+      // Reload tokens from the file to ensure they are in sync
+      tokens = loadTokensFromFile();
+
+      // Reinitialize Google Assistant instance with updated tokens
+      reinitializeAssistant();
       console.log("Tokens updated successfully.");
       res.status(200).send("Tokens updated successfully!");
     } catch (error) {
@@ -169,7 +182,6 @@ const startConversation = async (query) => {
     }
   }
 
-  let tokens = loadTokensFromFile();
   // Always use the latest tokens
   config.auth.tokens = tokens;
 
@@ -204,13 +216,15 @@ const startConversation = async (query) => {
             }
           })
           .on("error", (error) => {
-            console.error("Conversation Error:", error?.details ? error.details : error);
+            console.error(
+              "Conversation Error:",
+              error?.details ? error.details : error
+            );
             if (error?.code == 16) {
               reject({ error: "Not Authorized" });
             } else {
               reject({ error: "Conversation error occurred" });
             }
-
           });
       }
     );
@@ -226,12 +240,11 @@ app.post("/query", async (req, res) => {
     res.json(result); // Send the final response back to client
   } catch (error) {
     console.error("Error in conversation:", error);
-    if(error?.error == "Not Authorized"){
+    if (error?.error == "Not Authorized") {
       res.status(401).json({ error: "Not Authorized" });
     } else {
       res.status(500).json(error);
     }
-
   }
 });
 
@@ -239,7 +252,7 @@ app.post("/query", async (req, res) => {
 app.listen(PORT, (error) => {
   if (!error) {
     console.log(
-      `Server is Successfully Running, and App is listening on port ${PORT}`,
+      `Server is Successfully Running, and App is listening on port ${PORT}`
     );
   } else {
     console.error("Error occurred, server can't start", error);
