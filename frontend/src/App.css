@@ -70,7 +70,7 @@
 .fan-blades {
   width: 100px;
   height: 100px;
-  background: url('/assets/fan-blades.svg') no-repeat center/contain;
+  background: url('public/assets/fan-blades.svg') no-repeat center/contain;
 }
 
 @keyframes spin {
@@ -106,4 +106,10 @@
 /* New class to stop animation */
 .stopped {
   animation: none;
+}
+
+.fan-offline {
+  width: 100px;
+  height: 100px;
+  background: url('public/assets/fan-offline.svg') no-repeat center/contain !important;
 }

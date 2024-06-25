@@ -1,6 +1,6 @@
 
 import { message } from "antd";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import AppHeader from "./components/AppHeader";
 import RoomComponent from "./components/RoomComponent";
@@ -11,7 +11,6 @@ const App = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [deviceConfig, setDeviceConfig] = useState("");
   const [formattedData, setFormattedData] = useState(null);
-  const [forceReload, setForceReload] = useState(false);
 
   useEffect(() => {
     function init() {
@@ -59,6 +58,7 @@ const App = () => {
         localStorage.setItem("deviceConfig", JSON.stringify(deviceConfig));
       }
       message.success("Configuration saved successfully");
+      setShowSettings(false);
     } else {
       message.error("Invalid configuration format");
     }
@@ -66,7 +66,7 @@ const App = () => {
 
   return (
     <div className="App">
-      <AppHeader onCogToggle={() => setShowSettings(true)} />
+      <AppHeader onCogToggle={() => setShowSettings(true)}/>
 
       <div className="container">
         {showSettings ? (
@@ -88,7 +88,6 @@ const App = () => {
                   key={index}
                   name={room}
                   data={formattedData[room]}
-                  forceReload={forceReload}
                 />
               ))}
           </>

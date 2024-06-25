@@ -6,7 +6,7 @@ import DeviceCard from "./DeviceCard";
 import ToggleButton from "./ToggleButton";
 
 const { Text } = Typography;
-const FanComponent = ({ data, forceReload }) => {
+const FanComponent = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("OFFLINE");
   const [loaded, setLoaded] = useState(false);
@@ -21,17 +21,20 @@ const FanComponent = ({ data, forceReload }) => {
   const maxSpeed = data.maxSpeed || 5;
   useEffect(() => {
     const deviceStatus = getDeviceStatusFromStorage(data.deviceName);
-    setStatus(deviceStatus?.status ? deviceStatus.status : 'OFFLINE' );
+    setStatus(deviceStatus?.status ? deviceStatus.status : 'OFFLINE');
+    setCurrentLevel(deviceStatus?.level ? deviceStatus.level : 1);
+    setDebouncedSpeed(deviceStatus?.level ? deviceStatus.level : 1);
+    setCheckLevel(deviceStatus?.level ? deviceStatus.level : 1);
     setLastFetchedAt(deviceStatus
       ?.lastFetchedAt ? deviceStatus.lastFetchedAt : null);
     setLoaded(true);
   }, []);
 
   useEffect(() => {
-    if ((lastFetchedAt === null || forceReload) && loaded) {
+    if ((lastFetchedAt === null ) && loaded) {
       handleRefresh();
     }
-  }, [lastFetchedAt, forceReload]);
+  }, [lastFetchedAt,]);
 
 
    const resetValues = () => {
@@ -48,9 +51,9 @@ const FanComponent = ({ data, forceReload }) => {
       deviceStatus["level"] = level;
       deviceStatus["lastFetchedAt"] = Date.now();
       setStatus(deviceStatus["status"] ? deviceStatus["status"] : 'OFFLINE');
-      setCurrentLevel(level);
-      setDebouncedSpeed(level);
-      setCheckLevel(level);
+      setCurrentLevel(deviceStatus["level"] ? deviceStatus["level"] : 1);
+      setDebouncedSpeed(deviceStatus["level"] ? deviceStatus["level"] : 1);
+      setCheckLevel(deviceStatus["level"] ? deviceStatus["level"] : 1);
       setLastFetchedAt(deviceStatus["lastFetchedAt"] ? deviceStatus["lastFetchedAt"] : null);
       saveDeviceStatusToStorage(data.deviceName, deviceStatus);
       setLoading(false);
@@ -62,11 +65,6 @@ const FanComponent = ({ data, forceReload }) => {
     }
   };
 
-  useEffect(() => {
-    if (forceReload) {
-      handleRefresh();
-    }
-  }, [forceReload]);
 
   const toggleStatus = async () => {
     setLoading(true);
@@ -94,14 +92,22 @@ const FanComponent = ({ data, forceReload }) => {
     const updateSpeed = async () => {
       if (debouncedSpeed > 0 && debouncedSpeed !== checkLevel) {
         setLoading(true);
-        const query = `Set my ${data.deviceName} speed to ${debouncedSpeed}`;
-        const result = await assistantAPI(query);
-        message.success(result);
         let deviceStatus = getDeviceStatusFromStorage(data.deviceName);
+        try {
+          const query = `Set my ${data.deviceName} speed to ${debouncedSpeed}`;
+          const result = await assistantAPI(query);
+          message.success(result);
+          deviceStatus["level"] = debouncedSpeed;
+          setCheckLevel(debouncedSpeed);
+        } catch (error) {
+          deviceStatus["status"] = "OFFLINE";
+          deviceStatus["level"] = 1;
+          setCheckLevel(1);
+          message.error(error);
+        }
+
         deviceStatus["lastFetchedAt"] = Date.now();
-        deviceStatus["level"] = debouncedSpeed;
         saveDeviceStatusToStorage(data.deviceName, deviceStatus);
-        setCheckLevel(debouncedSpeed);
         setLastFetchedAt(deviceStatus["lastFetchedAt"]);
         setLoading(false);
       }
@@ -125,9 +131,13 @@ const FanComponent = ({ data, forceReload }) => {
         hoverable={false}
       >
         <div
-          className={`fan-blades ${
-            status !== "ON" ? "stopped" : `speed-${currentLevel}`
-          }`}
+          className={
+            status === "OFFLINE"
+              ? "fan-offline"
+              : status !== "ON"
+              ? "fan-blades stopped"
+              : `fan-blades speed-${currentLevel}`
+          }
         ></div>
       </Card.Grid>
       <Card.Grid
@@ -152,14 +162,14 @@ const FanComponent = ({ data, forceReload }) => {
                   width: "150px",
                 }}
                 tooltip={{
-                  open: true,
+                  open: status === "ON" ? true : false,
                   placement: "bottom",
                 }}
                 min={1}
                 max={parseInt(maxSpeed, 10)}
                 keyboard={true}
                 step={1}
-                value={currentLevel}
+                value={status === "ON" ? currentLevel : null}
                 disabled={status !== "ON" || loading}
                 marks={{
                   1: "1",
