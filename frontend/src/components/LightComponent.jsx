@@ -88,16 +88,12 @@ const LightComponent = ({ data, forceReload }) => {
         }}
       >
         <Flex vertical gap="small">
-          <span style={{ fontWeight: "bold", textAlign: "center" }}>
-            Operations
-          </span>
           <Flex wrap gap="small">
             <ToggleButton
               onToggle={toggleStatus}
               isLoading={loading}
               status={status}
             />
-            <Divider type="vertical" style={{ height: "100px" }} />
           </Flex>
         </Flex>
       </Card.Grid>

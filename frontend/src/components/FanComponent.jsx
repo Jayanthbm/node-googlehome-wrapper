@@ -99,6 +99,7 @@ const FanComponent = ({ data, forceReload }) => {
 
     updateSpeed();
   }, [debouncedSpeed]);
+
   return (
     <DeviceCard
       title={data.deviceName}
@@ -122,9 +123,6 @@ const FanComponent = ({ data, forceReload }) => {
         }}
       >
         <Flex vertical gap="small">
-          <span style={{ fontWeight: "bold", textAlign: "center" }}>
-            Operations
-          </span>
           <Flex wrap gap="small">
             <ToggleButton
               onToggle={toggleStatus}
@@ -141,6 +139,7 @@ const FanComponent = ({ data, forceReload }) => {
                 }}
                 tooltip={{
                   open: true,
+                  placement: "bottom",
                 }}
                 min={1}
                 max={parseInt(maxSpeed, 10)}

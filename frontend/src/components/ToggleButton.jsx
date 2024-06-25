@@ -1,7 +1,7 @@
 import { LoginOutlined, LogoutOutlined, StopOutlined } from "@ant-design/icons";
 import { Button, Flex, Tooltip, Typography } from "antd";
 import React from "react";
-const { Text,Title } = Typography;
+const { Text } = Typography;
 
 const ToggleButton = ({ status, onToggle, isLoading }) => {
   return (

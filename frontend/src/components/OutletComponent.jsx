@@ -88,9 +88,6 @@ const OutletComponent = ({ data, forceReload }) => {
         }}
       >
         <Flex vertical gap="small">
-          <span style={{ fontWeight: "bold", textAlign: "center" }}>
-            Operations
-          </span>
           <Flex wrap gap="small">
             <ToggleButton
               onToggle={toggleStatus}
