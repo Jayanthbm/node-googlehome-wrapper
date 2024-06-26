@@ -75,7 +75,7 @@
 /* Existing CSS */
 .fan-blades {
 
-  background: url('public/assets/fan-blades.svg') no-repeat center/contain;
+  background: url('/assets/fan-blades.svg') no-repeat center/contain;
 }
 
 @keyframes spin {
@@ -116,5 +116,5 @@
 .fan-offline {
   width: 100px;
   height: 100px;
-  background: url('public/assets/fan-offline.svg') no-repeat center/contain !important;
+  background: url('/assets/fan-offline.svg') no-repeat center/contain !important;
 }
