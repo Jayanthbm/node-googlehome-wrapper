@@ -234,19 +234,39 @@ const startConversation = async (query) => {
 // Endpoint to handle query requests
 app.post("/query", async (req, res) => {
   const { query } = req.body;
+  let retryCounter = 0;
+  const maxRetries = 5;
+  const retryInterval = 500; // Interval between retries in milliseconds
 
-  try {
-    const result = await startConversation(query);
-    res.json(result); // Send the final response back to client
-  } catch (error) {
-    console.error("Error in conversation:", error);
-    if (error?.error == "Not Authorized") {
-      res.status(401).json({ error: "Not Authorized" });
-    } else {
-      res.status(500).json(error);
+  const attemptConversation = async () => {
+    try {
+      const result = await startConversation(query);
+      res.json(result); // Send the final response back to client
+    } catch (error) {
+      console.error("Error in conversation:", error);
+      if (
+        error?.error === "Error: Tried calling start() before the ready event!"
+      ) {
+        if (retryCounter < maxRetries) {
+          retryCounter++;
+          console.log(`Retrying conversation... Attempt ${retryCounter}`);
+          setTimeout(attemptConversation, retryInterval);
+        } else {
+          res
+            .status(500)
+            .json({ error: "Max retries reached. Assistant is not ready." });
+        }
+      } else if (error?.error === "Not Authorized") {
+        res.status(401).json({ error: "Not Authorized" });
+      } else {
+        res.status(500).json(error);
+      }
     }
-  }
+  };
+
+  attemptConversation();
 });
+
 
 // Start the server
 app.listen(PORT, (error) => {
