@@ -1,7 +1,7 @@
 
 import { Card, Divider, Flex, Slider, Typography, message } from "antd";
 import React, { useEffect, useRef, useState } from "react";
-import { assistantAPI, getDeviceStatus, getDeviceStatusFromStorage, levelGrabber, saveDeviceStatusToStorage, toggleDeviceStatus } from "../utils";
+import { assistantAPI, getDeviceLevel, getDeviceStatus, getDeviceStatusFromStorage, levelGrabber, saveDeviceStatusToStorage, toggleDeviceStatus, updateLevel } from "../utils";
 import DeviceCard from "./DeviceCard";
 import ToggleButton from "./ToggleButton";
 
@@ -14,16 +14,16 @@ const FanComponent = ({ data }) => {
 
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [debouncedSpeed, setDebouncedSpeed] = useState(0);
+  const [debouncedLevel, setdebouncedLevel] = useState(0);
   const [checkLevel, setCheckLevel] = useState(0);
 
   const debounceTimeoutRef = useRef(null);
-  const maxSpeed = data.maxSpeed || 5;
+  const maxLevel = data.maxSpeed || 5;
   useEffect(() => {
     const deviceStatus = getDeviceStatusFromStorage(data.deviceName);
     setStatus(deviceStatus?.status ? deviceStatus.status : 'OFFLINE');
     setCurrentLevel(deviceStatus?.level ? deviceStatus.level : 1);
-    setDebouncedSpeed(deviceStatus?.level ? deviceStatus.level : 1);
+    setdebouncedLevel(deviceStatus?.level ? deviceStatus.level : 1);
     setCheckLevel(deviceStatus?.level ? deviceStatus.level : 1);
     setLastFetchedAt(deviceStatus
       ?.lastFetchedAt ? deviceStatus.lastFetchedAt : null);
@@ -34,32 +34,32 @@ const FanComponent = ({ data }) => {
     if ((lastFetchedAt === null ) && loaded) {
       handleRefresh();
     }
-  }, [lastFetchedAt,]);
+  }, [lastFetchedAt]);
 
 
    const resetValues = () => {
      setStatus("OFFLINE");
    };
+
   const handleRefresh = async () => {
     try {
       setLoading(true);
       resetValues();
-      let deviceStatus = await getDeviceStatus(data.deviceName);
-      let queryLevelPrompt = `What is my ${data.deviceName} set to?`;
-      let queryLevel = await assistantAPI(queryLevelPrompt);
-      const level = levelGrabber(queryLevel, maxSpeed);
-      deviceStatus["level"] = level;
-      deviceStatus["lastFetchedAt"] = Date.now();
-      setStatus(deviceStatus["status"] ? deviceStatus["status"] : 'OFFLINE');
-      setCurrentLevel(deviceStatus["level"] ? deviceStatus["level"] : 1);
-      setDebouncedSpeed(deviceStatus["level"] ? deviceStatus["level"] : 1);
-      setCheckLevel(deviceStatus["level"] ? deviceStatus["level"] : 1);
-      setLastFetchedAt(deviceStatus["lastFetchedAt"] ? deviceStatus["lastFetchedAt"] : null);
-      saveDeviceStatusToStorage(data.deviceName, deviceStatus);
+      await getDeviceStatus(data.deviceName);
+      let deviceLevel = await getDeviceLevel({
+        deviceName: data.deviceName,
+        queryVariable: 'speed',
+        maxLevel
+      });
+      setStatus(deviceLevel['status']);
+      setCurrentLevel(deviceLevel['level']);
+      setCheckLevel(deviceLevel['level']);
+      setdebouncedLevel(deviceLevel['level']);
+      setLastFetchedAt(deviceLevel['lastFetchedAt']);
       setLoading(false);
-      return deviceStatus["lastApiRequestStatus"];
+      return deviceLevel["lastApiRequestStatus"];
     } catch (error) {
-      console.log("Error");
+      console.log("Error",error);
       setLoading(false);
       return false;
     }
@@ -76,7 +76,7 @@ const FanComponent = ({ data }) => {
     setLoading(false);
   };
 
-  const handleSpeedChange = (value) => {
+  const handleLevelChange = (value) => {
     const speed = value;
     setCurrentLevel(speed);
     if (debounceTimeoutRef.current) {
@@ -84,37 +84,32 @@ const FanComponent = ({ data }) => {
     }
 
     debounceTimeoutRef.current = setTimeout(() => {
-      setDebouncedSpeed(speed);
+      setdebouncedLevel(speed);
     }, 500); // 500ms debounce delay
   };
 
   useEffect(() => {
     const updateSpeed = async () => {
-      if (debouncedSpeed > 0 && debouncedSpeed !== checkLevel) {
+      if (debouncedLevel > 0 && debouncedLevel !== checkLevel) {
         setLoading(true);
-        let deviceStatus = getDeviceStatusFromStorage(data.deviceName);
-        try {
-          const query = `Set my ${data.deviceName} speed to ${debouncedSpeed}`;
-          const result = await assistantAPI(query);
-          message.success(result);
-          deviceStatus["level"] = debouncedSpeed;
-          setCheckLevel(debouncedSpeed);
-        } catch (error) {
-          deviceStatus["status"] = "OFFLINE";
-          deviceStatus["level"] = 1;
-          setCheckLevel(1);
-          message.error(error);
-        }
-
-        deviceStatus["lastFetchedAt"] = Date.now();
-        saveDeviceStatusToStorage(data.deviceName, deviceStatus);
-        setLastFetchedAt(deviceStatus["lastFetchedAt"]);
+        const updatedLevel = await updateLevel({
+          deviceName: data.deviceName,
+          property: debouncedLevel,
+          propertyVariable: "level",
+          queryVariable: "speed",
+          defaultPropertyValue: 1,
+        });
+        setCurrentLevel(updatedLevel["level"]);
+        setdebouncedLevel(updatedLevel["level"]);
+        setCheckLevel(updatedLevel["level"]);
+        setStatus(updatedLevel["status"]);
+        setLastFetchedAt(updatedLevel["lastFetchedAt"]);
         setLoading(false);
       }
     };
 
     updateSpeed();
-  }, [debouncedSpeed]);
+  }, [debouncedLevel]);
 
   return (
     <DeviceCard
@@ -133,10 +128,10 @@ const FanComponent = ({ data }) => {
         <div
           className={
             status === "OFFLINE"
-              ? "fan-offline"
+              ? "svg-wrapper fan-offline"
               : status !== "ON"
-              ? "fan-blades stopped"
-              : `fan-blades speed-${currentLevel}`
+              ? "svg-wrapper fan-blades stopped"
+              : `svg-wrapper fan-blades speed-${currentLevel}`
           }
         ></div>
       </Card.Grid>
@@ -161,12 +156,8 @@ const FanComponent = ({ data }) => {
                 style={{
                   width: "150px",
                 }}
-                tooltip={{
-                  open: status === "ON" ? true : false,
-                  placement: "bottom",
-                }}
                 min={1}
-                max={parseInt(maxSpeed, 10)}
+                max={parseInt(maxLevel, 10)}
                 keyboard={true}
                 step={1}
                 value={status === "ON" ? currentLevel : null}
@@ -178,7 +169,7 @@ const FanComponent = ({ data }) => {
                   4: "4",
                   5: "5",
                 }}
-                onChange={handleSpeedChange}
+                onChange={handleLevelChange}
               />
             </Flex>
           </Flex>

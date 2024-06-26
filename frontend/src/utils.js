@@ -75,7 +75,6 @@ export const assistantAPI = async (prompt) => {
     let result = await axios.post(backendApiUrl, { query: prompt });
     return result.data.response;
   } catch (error) {
-    console.log("Error calling API:", error);
     if(error?.response?.status == 401){
       const authURL = backendApiUrl.replace("/query", "/auth/start");
       window.open(authURL, "_blank");
@@ -171,33 +170,79 @@ export const getDeviceStatus = async (deviceName) => {
 
 export const toggleDeviceStatus = async (deviceName, currentStatus) => {
   try {
+    const deviceStatus = getDeviceStatusFromStorage(deviceName);
     let query;
     if (currentStatus === "ON") {
       query = `Turn off my ${deviceName}`;
     } else {
       query = `Turn on my ${deviceName}`;
     }
-    let deviceStatus = getDeviceStatusFromStorage(deviceName);
-    try {
-      const result = await assistantAPI(query);
-      if (result !== null) {
-        message.success(result);
-        deviceStatus["status"] = currentStatus === "ON" ? "OFF" : "ON";
-        deviceStatus["lastFetchedAt"] = Date.now();
-        saveDeviceStatusToStorage(deviceName, deviceStatus);
-
-        return deviceStatus;
-      } else {
-        message.error(`Failed to ${query}. Please try again.`);
-        return deviceStatus
-      }
-
-    } catch (error) {
-      console.log("Error calling API:", error);
-      return deviceStatus;
+    const result = await assistantAPI(query);
+    deviceStatus["lastApiRequestStatus"] = result == null ? false : true;
+    deviceStatus['status'] = result == null ? "OFFLINE" : currentStatus === "ON" ? "OFF" : "ON";
+    deviceStatus["lastFetchedAt"] = Date.now();
+    saveDeviceStatusToStorage(deviceName, deviceStatus);
+    if(result != null){
+      message.success(result);
     }
-
+    return deviceStatus;
   } catch (error) {
     console.log("Error toggling device status:", error);
+  }
+}
+
+export const updateLevel = async ({
+  deviceName,
+  property,
+  propertyVariable,
+  queryVariable,
+  defaultPropertyValue,
+}) => {
+  try {
+    const deviceStatus = getDeviceStatusFromStorage(deviceName);
+    const query = `Set my ${deviceName} ${queryVariable} to ${property}`;
+    const result = await assistantAPI(query);
+    deviceStatus["lastApiRequestStatus"] = result == null ? false : true;
+    deviceStatus["lastFetchedAt"] = Date.now();
+    deviceStatus["status"] =
+      result == null ? "OFFLINE" : deviceStatus["status"];
+    deviceStatus[propertyVariable] =
+      result == null ? defaultPropertyValue : property;
+    saveDeviceStatusToStorage(deviceName, deviceStatus);
+    if (result != null) {
+      message.success(result);
+    }
+    return deviceStatus;
+  } catch (error) {
+    console.log("Error updating speed:", error);
+  }
+};
+
+export const getDeviceLevel = async({
+  deviceName,
+  queryVariable,
+  maxLevel
+}) => {
+  try {
+    const deviceStatus = getDeviceStatusFromStorage(deviceName);
+    const levelQuery = `What is my ${deviceName} ${queryVariable} set to?`;
+    const levelResult = await assistantAPI(levelQuery);
+    const level = levelGrabber(levelResult, maxLevel);
+    console.log("level", level);
+    if (level != null) {
+      deviceStatus["level"] = level;
+      deviceStatus["lastFetchedAt"] = Date.now();
+      deviceStatus["lastApiRequestStatus"]= true;
+    } else {
+      deviceStatus["level"] = 1;
+      deviceStatus["lastFetchedAt"] = Date.now();
+      deviceStatus["status"] = "OFFLINE";
+      deviceStatus["lastApiRequestStatus"]= false;
+    }
+
+    saveDeviceStatusToStorage(deviceName, deviceStatus);
+    return deviceStatus;
+  } catch (error) {
+    console.log("Error getting device level:", error);
   }
 }

@@ -1,4 +1,4 @@
-import { Card, Divider, Flex } from "antd";
+import { Card, Flex } from "antd";
 import React, { useEffect, useState } from "react";
 import {
   getDeviceStatus,
@@ -7,7 +7,9 @@ import {
 } from "../utils";
 import DeviceCard from "./DeviceCard";
 import ToggleButton from "./ToggleButton";
-const OutletComponent = ({ data, forceReload }) => {
+import { OutletSVG } from "./SvgComponets";
+
+const OutletComponent = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("OFFLINE");
   const [loaded, setLoaded] = useState(false);
@@ -23,10 +25,10 @@ const OutletComponent = ({ data, forceReload }) => {
   }, []);
 
   useEffect(() => {
-    if ((lastFetchedAt === null || forceReload) && loaded) {
+    if (lastFetchedAt === null && loaded) {
       handleRefresh();
     }
-  }, [lastFetchedAt, forceReload]);
+  }, [lastFetchedAt]);
 
   const resetValues = () => {
     setStatus("OFFLINE");
@@ -36,7 +38,6 @@ const OutletComponent = ({ data, forceReload }) => {
       setLoading(true);
       resetValues();
       let deviceStatus = await getDeviceStatus(data.deviceName);
-      console.log("deviceStatus", deviceStatus);
       setStatus(deviceStatus["status"] ? deviceStatus["status"] : "OFFLINE");
       setLastFetchedAt(
         deviceStatus["lastFetchedAt"] ? deviceStatus["lastFetchedAt"] : null
@@ -49,12 +50,6 @@ const OutletComponent = ({ data, forceReload }) => {
       return false;
     }
   };
-
-  useEffect(() => {
-    if (forceReload) {
-      handleRefresh();
-    }
-  }, [forceReload]);
 
   const toggleStatus = async () => {
     setLoading(true);
@@ -79,7 +74,7 @@ const OutletComponent = ({ data, forceReload }) => {
         }}
         hoverable={false}
       >
-        Content
+        <OutletSVG status={status} />
       </Card.Grid>
       <Card.Grid
         hoverable={false}
@@ -94,7 +89,6 @@ const OutletComponent = ({ data, forceReload }) => {
               isLoading={loading}
               status={status}
             />
-            <Divider type="vertical" style={{ height: "100px" }} />
           </Flex>
         </Flex>
       </Card.Grid>

@@ -64,38 +64,41 @@ const DeviceCard = ({ title, isLoading, status, onReload, children, fetchedAt })
       extra={
         <>
           {RenderIcon(status, title)}
-          <Tooltip title="Refresh">
-            {contextHolder}
-            <ReloadOutlined
-              style={{
-                ...iconStyle,
-                color: "#00BFFF",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                marginLeft: "10px",
-              }}
-              spin={isLoading}
-              onClick={async () => {
-                if (isLoading) {
-                  return;
-                } else {
-                  messageApi.open({
-                    type: "loading",
-                    content: `Refreshing ${title} status...`,
-                    duration: 0,
-                  });
-                  let status = await onReload();
-                  console.log("status", status);
-                  if (status) {
-                    messageApi.destroy();
-                    message.success(`Refreshed ${title} successfully`);
+          {onReload ? (
+            <Tooltip title="Refresh">
+              {contextHolder}
+              <ReloadOutlined
+                style={{
+                  ...iconStyle,
+                  color: "#00BFFF",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  marginLeft: "10px",
+                }}
+                spin={isLoading}
+                onClick={async () => {
+                  if (isLoading) {
+                    return;
                   } else {
-                    messageApi.destroy();
-                    message.error(`Failed to refresh ${title} status`);
+                    messageApi.open({
+                      type: "loading",
+                      content: `Refreshing ${title} status...`,
+                      duration: 0,
+                    });
+                    let status = await onReload();
+                    if (status) {
+                      messageApi.destroy();
+                      message.success(`Refreshed ${title} successfully`);
+                    } else {
+                      messageApi.destroy();
+                      message.error(`Failed to refresh ${title} status`);
+                    }
                   }
-                }
-              }}
-            />
-          </Tooltip>
+                }}
+              />
+            </Tooltip>
+          ) : (
+            <></>
+          )}
         </>
       }
     >
