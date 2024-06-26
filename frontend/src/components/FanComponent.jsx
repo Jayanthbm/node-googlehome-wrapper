@@ -45,21 +45,28 @@ const FanComponent = ({ data }) => {
     try {
       setLoading(true);
       resetValues();
-      await getDeviceStatus(data.deviceName);
-      let deviceLevel = await getDeviceLevel({
-        deviceName: data.deviceName,
-        queryVariable: 'speed',
-        maxLevel
-      });
-      setStatus(deviceLevel['status']);
-      setCurrentLevel(deviceLevel['level']);
-      setCheckLevel(deviceLevel['level']);
-      setdebouncedLevel(deviceLevel['level']);
-      setLastFetchedAt(deviceLevel['lastFetchedAt']);
+      let deviceStatus = await getDeviceStatus(data.deviceName);
+      let deviceLevel;
+      if (deviceStatus["status"] === "ON") {
+        deviceLevel = await getDeviceLevel({
+          deviceName: data.deviceName,
+          queryVariable: "speed",
+          maxLevel,
+        });
+        setCurrentLevel(deviceLevel["level"]);
+        setCheckLevel(deviceLevel["level"]);
+        setdebouncedLevel(deviceLevel["level"]);
+      } else {
+        deviceLevel = deviceStatus;
+      }
+
+      setStatus(deviceLevel["status"]);
+
+      setLastFetchedAt(deviceLevel["lastFetchedAt"]);
       setLoading(false);
       return deviceLevel["lastApiRequestStatus"];
     } catch (error) {
-      console.log("Error",error);
+      console.log("Error", error);
       setLoading(false);
       return false;
     }
