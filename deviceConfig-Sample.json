@@ -19,7 +19,21 @@
     {
       "deviceName": "Bed Light",
       "deviceType": "Light",
-      "roomName": "Master Bedroom"
+      "roomName": "Master Bedroom",
+      "colors": {
+        "cool white": "#F4F5F7",
+        "daylight": "#EDF4FC",
+        "ivory": "#FFFFF0",
+        "warm white": "#FFD700",
+        "incandescent": "#FFC676",
+        "candlelight": "#FFDFB9",
+        "snow": "#FFFAFA",
+        "ghost white": "#F8F8FF",
+        "alice blue": "#F0F8FF",
+        "light goldenrod": "#FAFAD2",
+        "lemon chiffon": "#FFFACD",
+        "antique white": "#FAEBD7"
+      }
     },
     {
       "deviceName": "Home Mini-1",
