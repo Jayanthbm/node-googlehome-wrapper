@@ -184,7 +184,6 @@ const startConversation = async (query) => {
 
   // Always use the latest tokens
   config.auth.tokens = tokens;
-
   return new Promise((resolve, reject) => {
     assistant.start(
       { ...config.conversation, textQuery: query },
@@ -247,6 +246,7 @@ app.post("/query", async (req, res) => {
       if (
         error?.error === "Error: Tried calling start() before the ready event!"
       ) {
+        console.log("Waiting for Assistant to be ready...");
         if (retryCounter < maxRetries) {
           retryCounter++;
           console.log(`Retrying conversation... Attempt ${retryCounter}`);

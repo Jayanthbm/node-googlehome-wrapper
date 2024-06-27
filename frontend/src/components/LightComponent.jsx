@@ -1,5 +1,6 @@
 import { Card, Divider, Flex, Popover, Slider, Typography } from "antd";
 import React, { useEffect, useRef, useState } from "react";
+import { LIGHT_COLORS } from "../constants";
 import {
   getDeviceLevel,
   getDeviceStatus,
@@ -15,6 +16,8 @@ import ToggleButton from "./ToggleButton";
 
 const { Text } = Typography;
 
+
+
 const LightComponent = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("OFFLINE");
@@ -23,7 +26,7 @@ const LightComponent = ({ data }) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [debouncedLevel, setDebouncedLevel] = useState(0);
   const [checkLevel, setCheckLevel] = useState(0);
-  const [selectedColor, setSelectedColor] = useState("#FFFFFF");
+  const [selectedColor, setSelectedColor] = useState(LIGHT_COLORS["cool white"]);
   const [popoverVisible, setPopoverVisible] = useState(false);
 
   const debounceTimeoutRef = useRef(null);
@@ -38,7 +41,9 @@ const LightComponent = ({ data }) => {
     setLastFetchedAt(
       deviceStatus?.lastFetchedAt ? deviceStatus.lastFetchedAt : null
     );
-    setSelectedColor(deviceStatus?.color ? deviceStatus.color : "#FFFFFF");
+    setSelectedColor(
+      deviceStatus?.color ? deviceStatus.color : LIGHT_COLORS["cool white"]
+    );
     setLoaded(true);
   }, [data.deviceName]);
 
@@ -133,7 +138,7 @@ const LightComponent = ({ data }) => {
       property: color,
       propertyVariable: "color",
       queryVariable: "color",
-      defaultPropertyValue: "#FFFFFF",
+      defaultPropertyValue: LIGHT_COLORS["cool white"],
     });
 
     if (updatedColor['color'] === color) {
@@ -156,7 +161,7 @@ const LightComponent = ({ data }) => {
   const colorPickerContent = (
     <div style={{ maxWidth: "200px", maxHeight: "150px", overflowY: "auto" }}>
       <CustomColorPicker
-        colors={data.colors}
+        colors={LIGHT_COLORS}
         selectedColor={selectedColor}
         onChange={handleColorChange}
       />
@@ -182,7 +187,7 @@ const LightComponent = ({ data }) => {
       onReload={handleRefresh}
       fetchedAt={lastFetchedAt}
     >
-      {(data.colors && status === "ON") ? (
+      {data.isMultiColor && status === "ON" ? (
         <Popover
           content={colorPickerContent}
           trigger="click"
@@ -210,7 +215,9 @@ const LightComponent = ({ data }) => {
             />
             <Divider type="vertical" style={{ height: "100px" }} />
             <Flex gap="small" vertical>
-              <Text type="secondary">Brightness {status ==='ON' ? `(${currentLevel}%)` : ''}</Text>
+              <Text type="secondary">
+                Brightness {status === "ON" ? `(${currentLevel}%)` : ""}
+              </Text>
               <Slider
                 dots={true}
                 style={{

@@ -11,7 +11,7 @@ import { SpeakerSVG } from "./SvgComponets";
 const SpeakerComponent = ({ data }) => {
   const [loading, setLoading] = useState(false);
   return (
-    <DeviceCard title={data.deviceName} onReload={null} status={"ON"} loading={loading}>
+    <DeviceCard title={data.deviceName} onReload={null} status={"ON"} loading={loading} fetchedAt={null}>
       <Card.Grid
         style={{
           width: "30%",
