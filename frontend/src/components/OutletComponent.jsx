@@ -22,8 +22,7 @@ const OutletComponent = ({ data }) => {
   useEffect(() => {
     const deviceStatus = getDeviceStatusFromStorage(data.deviceName);
     const initialStatus = deviceStatus?.status || DEVICE_STATUS.OFFLINE;
-    setLastFetchedAt(deviceStatus?.lastFetchedAt || null);
-    setLoaded(true);
+    setStatus(initialStatus);
     setLastFetchedAt(deviceStatus?.lastFetchedAt || null);
     setLoaded(true);
   }, [data.deviceName]);

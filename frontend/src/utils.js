@@ -76,6 +76,7 @@ export const assistantAPI = async (prompt) => {
     let result = await axios.post(backendApiUrl, { query: prompt });
     return result.data.response;
   } catch (error) {
+    console.log("Error",error)
     if (error?.response?.status == 401) {
       const authURL = backendApiUrl.replace("/query", "/auth/start");
       window.open(authURL, "_blank");

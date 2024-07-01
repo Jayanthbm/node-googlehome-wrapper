@@ -184,16 +184,58 @@ const LightComponent = ({ data }) => {
       onReload={handleRefresh}
     >
       <Flex gap="small" vertical align="center">
-        <div
-          onClick={toggleStatus}
-          style={{
-            cursor:
-              status !== DEVICE_STATUS.OFFLINE ? "pointer" : "not-allowed",
-            opacity: loading ? 0.5 : 1,
-          }}
-        >
-          <LightSvg status={status} color={selectedColor} />
-        </div>
+        <Flex gap="small" align="center">
+          <div
+            onClick={toggleStatus}
+            style={{
+              cursor:
+                status !== DEVICE_STATUS.OFFLINE ? "pointer" : "not-allowed",
+              opacity: loading ? 0.5 : 1,
+            }}
+          >
+            <LightSvg status={status} color={selectedColor} />
+          </div>
+
+          <Popover
+            content={
+              <div style={{ width: 200, height: 150, overflowY: "auto" }}>
+                <CustomColorPicker
+                  colors={LIGHT_COLORS}
+                  selectedColor={selectedColor}
+                  onChange={handleColorChange}
+                />
+              </div>
+            }
+            title="Change Color"
+            trigger="click"
+            open={popoverVisible}
+            onOpenChange={setPopoverVisible}
+          >
+            <Button
+              shape="square"
+              style={{
+                width: 30,
+                height: 30,
+                backgroundColor:
+                  status === DEVICE_STATUS.ON
+                    ? selectedColor
+                    : status === DEVICE_STATUS.OFF
+                    ? "#fff"
+                    : "#ccc",
+                border: `1px solid ${
+                  status === DEVICE_STATUS.ON
+                    ? "#ccc"
+                    : status === DEVICE_STATUS.OFF
+                    ? "red"
+                    : "#ccc"
+                }`,
+                marginTop: 10,
+              }}
+              disabled={status !== DEVICE_STATUS.ON || loading}
+            />
+          </Popover>
+        </Flex>
+
         <Slider
           dots={true}
           style={{
@@ -212,51 +254,13 @@ const LightComponent = ({ data }) => {
           disabled={status !== "ON" || loading}
           onChange={handleLevelChange}
           marks={{
-            1: "1",
+            10: "10",
             25: "25",
             50: "50",
             75: "75",
             95: "95",
           }}
         />
-        <Popover
-          content={
-            <div style={{ width: 200, height: 150, overflowY: "auto" }}>
-              <CustomColorPicker
-                colors={LIGHT_COLORS}
-                selectedColor={selectedColor}
-                onChange={handleColorChange}
-              />
-            </div>
-          }
-          title="Change Color"
-          trigger="click"
-          open={popoverVisible}
-          onOpenChange={setPopoverVisible}
-        >
-          <Button
-            shape="square"
-            style={{
-              width: 30,
-              height: 30,
-              backgroundColor:
-                status === DEVICE_STATUS.ON
-                  ? selectedColor
-                  : status === DEVICE_STATUS.OFF
-                  ? "#fff"
-                  : "#ccc",
-              border: `1px solid ${
-                status === DEVICE_STATUS.ON
-                  ? "#ccc"
-                  : status === DEVICE_STATUS.OFF
-                  ? "red"
-                  : "#ccc"
-              }`,
-              marginTop: 10,
-            }}
-            disabled={status !== DEVICE_STATUS.ON || loading}
-          />
-        </Popover>
       </Flex>
     </DeviceCard>
   );

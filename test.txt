@@ -1,0 +1,23 @@
+broadcast to [device name], Hello
+
+
+Hey Google, what's playing?
+Hey Google, am I playing music?
+Hey Google, is there a podcast playing?
+
+
+Hey Google, pause/resume
+
+Hey Google, skip to the next song
+
+Hey Google, go back to the previous song
+
+Hey Google, set volume to 70
+
+Hey Google, set a reminder to call mom in 30 minutes" or
+Hey Google, set an alarm for 7 am
+
+
+Hey Google, add an event to my calendar called Doctor's appointment on Tuesday at 10 am at Central Hospital.
+
+Hey Google, add an event to my calendar called Meeting with John on Monday at 2 pm for 1 hour."
