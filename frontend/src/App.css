@@ -20,62 +20,26 @@
   align-items: center;
 }
 
-.icon {
-  font-size: 20px;
-  margin-right: 16px;
-  cursor: pointer;
-}
-
-.theme-icon {
-  font-size: 24px;
-  margin-left: 16px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.theme-icon:hover {
-  color: #ffa500;
-}
-
 .container {
   margin: 1rem;
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 16px;
-  padding: 16px;
-}
-
-.on-btn,
-.on-btn:hover {
-  background-color: #87d068 !important;
-  color: white;
-}
-
-.off-btn,
-.off-btn:hover {
-  background-color: #f50 !important;
-  color: white;
-}
-
-.offline-btn,
-.offline-btn:hover {
-  background-color: #9E9E9E !important;
-  color: white;
 }
 
 .svg-wrapper {
   width: 100px;
   height: 100px;
+  cursor: pointer;
 }
 
-/* Add this CSS in a relevant CSS or styled-components file */
-/* Existing CSS */
-.fan-blades {
+.svg-wrapper-offline {
+  width: 100px;
+  height: 100px;
+  cursor: not-allowed;
+}
 
+
+.fan-blades {
   background: url('/assets/fan-blades.svg') no-repeat center/contain;
+  cursor: pointer;
 }
 
 @keyframes spin {
@@ -117,4 +81,5 @@
   width: 100px;
   height: 100px;
   background: url('/assets/fan-offline.svg') no-repeat center/contain !important;
+  cursor:not-allowed
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "ui": "cd frontend && npm run dev",
+    "ui": "cd frontend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jayanthbharadwaj M",

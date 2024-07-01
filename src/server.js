@@ -66,6 +66,12 @@ const isTokenExpired = () => {
 // Function to refresh access token using refresh token
 const refreshAccessToken = async () => {
   try {
+    if (!tokens.refresh_token) {
+      const authUrl = getOAuthUrl(true);
+      const { default: open } = await import("open"); // Dynamically import the open module
+      await open(authUrl);
+      return;
+    }
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       refresh_token: tokens.refresh_token,
       client_id: credentials.web.client_id,
@@ -97,7 +103,7 @@ app.use(express.json());
 app.use(cors());
 
 // Helper function to generate Google OAuth URL
-const getOAuthUrl = () => {
+const getOAuthUrl = (forcePrompt = false) => {
   const params = {
     client_id: credentials.web.client_id,
     redirect_uri: `http://localhost:${PORT}/auth/handler`,
@@ -105,6 +111,10 @@ const getOAuthUrl = () => {
     scope: "https://www.googleapis.com/auth/assistant-sdk-prototype",
     access_type: "offline",
   };
+
+  if (forcePrompt) {
+    params.prompt ="consent";
+  }
   const url = new URL("https://accounts.google.com/o/oauth2/auth");
   url.search = querystring.stringify(params);
   return url.toString();

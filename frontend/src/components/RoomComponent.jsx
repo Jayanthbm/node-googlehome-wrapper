@@ -1,7 +1,6 @@
 import { HomeOutlined } from "@ant-design/icons";
-import { Breadcrumb } from "antd";
+import { Breadcrumb, Flex } from "antd";
 import React from "react";
-import CardGrid from "./CardGrid";
 import FanComponent from "./FanComponent";
 import LightComponent from "./LightComponent";
 import OutletComponent from "./OutletComponent";
@@ -22,7 +21,7 @@ const RoomComponent = ({ name, data }) => {
           },
         ]}
       />
-      <CardGrid>
+      <Flex gap="middle" align="start" wrap>
         {data.map((device, index) => {
           switch (device.deviceType) {
             case "Fan": {
@@ -42,7 +41,7 @@ const RoomComponent = ({ name, data }) => {
             }
           }
         })}
-      </CardGrid>
+      </Flex>
     </>
   );
 };

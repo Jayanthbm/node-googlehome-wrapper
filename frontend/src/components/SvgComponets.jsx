@@ -1,16 +1,28 @@
 import React from "react";
+import { DEVICE_STATUS } from "../constants";
 
 export const LightSvg = ({ status, color }) => {
-  console.log("LightSvg-color", color);
   const statusColor =
-    status === "ON" ? "#4CAF50" : status === "OFF" ? "#F44336" : "#9E9E9E";
+    status === DEVICE_STATUS.ON
+      ? "#4CAF50"
+      : status === DEVICE_STATUS.OFF
+      ? "#F44336"
+      : "#9E9E9E";
 
   // Set default color for the bulb depending on the status
   const bulbColor =
-    status === "ON" ? color : status === "OFF" ? "#FFFFFF" : "#9E9E9E";
+    status === DEVICE_STATUS.ON
+      ? color
+      : status === DEVICE_STATUS.OFF
+      ? "#FFFFFF"
+      : "#9E9E9E";
 
   return (
-    <div className="svg-wrapper">
+    <div
+      className={
+        status === DEVICE_STATUS.OFFLINE ? "svg-wrapper-offline" : "svg-wrapper"
+      }
+    >
       <svg
         width="100px"
         height="100px"
@@ -52,9 +64,17 @@ export const LightSvg = ({ status, color }) => {
 
 export const OutletSVG = ({ status }) => {
   const fillColor =
-    status === "ON" ? "#4CAF50" : status === "OFF" ? "#F44336" : "#9E9E9E";
+    status === DEVICE_STATUS.ON
+      ? "#4CAF50"
+      : status === DEVICE_STATUS.OFF
+      ? "#F44336"
+      : "#9E9E9E";
   return (
-    <div className="svg-wrapper">
+    <div
+      className={
+        status === DEVICE_STATUS.OFFLINE ? "svg-wrapper-offline" : "svg-wrapper"
+      }
+    >
       <svg
         version="1.1"
         id="_x36_"
@@ -180,7 +200,7 @@ export const OutletSVG = ({ status }) => {
 
 export const SpeakerSVG = () => {
   return (
-    <div className="svg-wrapper">
+    <div className="svg-wrapper-offline">
       <svg
         viewBox="0 0 64 64"
         xmlns="http://www.w3.org/2000/svg"

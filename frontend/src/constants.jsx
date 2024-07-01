@@ -42,3 +42,9 @@ export const LIGHT_COLORS = {
   lime: "#00FF00",
   "forest green": "#228B22",
 };
+
+export const DEVICE_STATUS = {
+  ON: "ON",
+  OFF: "OFF",
+  OFFLINE: "OFFLINE",
+};

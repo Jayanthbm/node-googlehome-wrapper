@@ -1,8 +1,9 @@
 import { message } from "antd";
 import axios from "axios";
+import { DEVICE_STATUS } from "./constants";
 export const formatDeviceConfiguration = (data) => {
   let jsonData;
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     jsonData = JSON.parse(data);
   } else {
     jsonData = data;
@@ -33,22 +34,22 @@ export const formatDeviceConfiguration = (data) => {
 
 export const statusTextGrabber = (text) => {
   if (!text) {
-    return "OFFLINE";
+    return DEVICE_STATUS.OFFLINE;
   }
   // Convert the input text to lowercase for case-insensitive search
   let lowerCaseText = text.toLowerCase();
 
   // Check if "on" is found in the text
   if (lowerCaseText.includes("on")) {
-    return "ON";
+    return DEVICE_STATUS.ON;
   }
   // Check if "off" is found in the text
   else if (lowerCaseText.includes("off")) {
-    return "OFF";
+    return DEVICE_STATUS.OFF;
   }
   // If neither "on" nor "off" is found, return "OFFLINE"
   else {
-    return "OFFLINE";
+    return DEVICE_STATUS.OFFLINE;
   }
 };
 
@@ -75,7 +76,7 @@ export const assistantAPI = async (prompt) => {
     let result = await axios.post(backendApiUrl, { query: prompt });
     return result.data.response;
   } catch (error) {
-    if(error?.response?.status == 401){
+    if (error?.response?.status == 401) {
       const authURL = backendApiUrl.replace("/query", "/auth/start");
       window.open(authURL, "_blank");
       message.destroy("API_ERROR");
@@ -89,10 +90,8 @@ export const assistantAPI = async (prompt) => {
       });
       return null;
     }
-
   }
 };
-
 
 // Export device configuration
 export const exportConfig = (deviceConfig) => {
@@ -106,16 +105,15 @@ export const exportConfig = (deviceConfig) => {
   document.body.removeChild(link);
 };
 
-
 export const isValidConfig = (config) => {
   try {
     let deviceConfig = JSON.parse(config);
     if (
-        deviceConfig.devices &&
-        Array.isArray(deviceConfig.devices) &&
-        deviceConfig.devices.every(
-          (device) => device.deviceName && device.deviceType && device.roomName
-        )
+      deviceConfig.devices &&
+      Array.isArray(deviceConfig.devices) &&
+      deviceConfig.devices.every(
+        (device) => device.deviceName && device.deviceType && device.roomName
+      )
     ) {
       return true;
     }
@@ -125,7 +123,7 @@ export const isValidConfig = (config) => {
     console.log("Invalid configuration: " + error.message);
     return false;
   }
-}
+};
 
 export const getDeviceStatusFromStorage = (deviceName) => {
   try {
@@ -133,13 +131,13 @@ export const getDeviceStatusFromStorage = (deviceName) => {
     if (deviceStatus) {
       return JSON.parse(deviceStatus);
     } else {
-      return {}
+      return {};
     }
   } catch (error) {
     console.log("Error getting device status from storage:", error);
     return {};
   }
-}
+};
 
 export const saveDeviceStatusToStorage = (deviceName, deviceStatus) => {
   try {
@@ -147,16 +145,16 @@ export const saveDeviceStatusToStorage = (deviceName, deviceStatus) => {
   } catch (error) {
     console.log("Error saving device status to storage:", error);
   }
-}
+};
 
 export const getDeviceStatus = async (deviceName) => {
   try {
     const deviceStatus = getDeviceStatusFromStorage(deviceName);
     const statusQuery = `Is my ${deviceName} turned on ?`;
-    let status = "OFFLINE";
+    let status = DEVICE_STATUS.OFFLINE;
     const statusResult = await assistantAPI(statusQuery);
     status = statusTextGrabber(statusResult);
-    deviceStatus["lastApiRequestStatus"] = statusResult == null ? false: true;
+    deviceStatus["lastApiRequestStatus"] = statusResult == null ? false : true;
     deviceStatus["status"] = status;
     deviceStatus["lastFetchedAt"] = Date.now();
     saveDeviceStatusToStorage(deviceName, deviceStatus);
@@ -167,29 +165,33 @@ export const getDeviceStatus = async (deviceName) => {
   }
 };
 
-
 export const toggleDeviceStatus = async (deviceName, currentStatus) => {
   try {
     const deviceStatus = getDeviceStatusFromStorage(deviceName);
     let query;
-    if (currentStatus === "ON") {
+    if (currentStatus === DEVICE_STATUS.ON) {
       query = `Turn off my ${deviceName}`;
     } else {
       query = `Turn on my ${deviceName}`;
     }
     const result = await assistantAPI(query);
     deviceStatus["lastApiRequestStatus"] = result == null ? false : true;
-    deviceStatus['status'] = result == null ? "OFFLINE" : currentStatus === "ON" ? "OFF" : "ON";
+    deviceStatus["status"] =
+      result == null
+        ? "OFFLINE"
+        : currentStatus === DEVICE_STATUS.ON
+        ? DEVICE_STATUS.OFF
+        : DEVICE_STATUS.ON;
     deviceStatus["lastFetchedAt"] = Date.now();
     saveDeviceStatusToStorage(deviceName, deviceStatus);
-    if(result != null){
+    if (result != null) {
       message.success(result);
     }
     return deviceStatus;
   } catch (error) {
     console.log("Error toggling device status:", error);
   }
-}
+};
 
 export const updateLevel = async ({
   deviceName,
@@ -218,10 +220,10 @@ export const updateLevel = async ({
   }
 };
 
-export const getDeviceLevel = async({
+export const getDeviceLevel = async ({
   deviceName,
   queryVariable,
-  maxLevel
+  maxLevel,
 }) => {
   try {
     const deviceStatus = getDeviceStatusFromStorage(deviceName);
@@ -232,12 +234,12 @@ export const getDeviceLevel = async({
     if (level != null) {
       deviceStatus["level"] = level;
       deviceStatus["lastFetchedAt"] = Date.now();
-      deviceStatus["lastApiRequestStatus"]= true;
+      deviceStatus["lastApiRequestStatus"] = true;
     } else {
       deviceStatus["level"] = 1;
       deviceStatus["lastFetchedAt"] = Date.now();
-      deviceStatus["status"] = "OFFLINE";
-      deviceStatus["lastApiRequestStatus"]= false;
+      deviceStatus["status"] = DEVICE_STATUS.OFFLINE;
+      deviceStatus["lastApiRequestStatus"] = false;
     }
 
     saveDeviceStatusToStorage(deviceName, deviceStatus);
@@ -245,4 +247,12 @@ export const getDeviceLevel = async({
   } catch (error) {
     console.log("Error getting device level:", error);
   }
-}
+};
+
+// Helper function to check time difference
+export const isTimeDifferenceExceeded = (lastFetchedAt, timeDifference) => {
+  const currentTime = new Date();
+  const fetchedTime = new Date(lastFetchedAt);
+  const diffInMinutes = (currentTime - fetchedTime) / (1000 * 60);
+  return diffInMinutes > timeDifference;
+};

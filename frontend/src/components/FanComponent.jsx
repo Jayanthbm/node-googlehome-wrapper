@@ -1,53 +1,95 @@
-
-import { Card, Divider, Flex, Slider, Typography, message } from "antd";
+import { Flex, Slider } from "antd";
 import React, { useEffect, useRef, useState } from "react";
-import { assistantAPI, getDeviceLevel, getDeviceStatus, getDeviceStatusFromStorage, levelGrabber, saveDeviceStatusToStorage, toggleDeviceStatus, updateLevel } from "../utils";
+import { DEVICE_STATUS } from "../constants";
+import {
+  getDeviceLevel,
+  getDeviceStatus,
+  getDeviceStatusFromStorage,
+  isTimeDifferenceExceeded,
+  toggleDeviceStatus,
+  updateLevel,
+} from "../utils";
 import DeviceCard from "./DeviceCard";
-import ToggleButton from "./ToggleButton";
 
-const { Text } = Typography;
 const FanComponent = ({ data }) => {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("OFFLINE");
+  const [status, setStatus] = useState(DEVICE_STATUS.OFFLINE);
   const [loaded, setLoaded] = useState(false);
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
 
-
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [debouncedLevel, setdebouncedLevel] = useState(0);
+  const [debouncedLevel, setDebouncedLevel] = useState(0);
   const [checkLevel, setCheckLevel] = useState(0);
 
   const debounceTimeoutRef = useRef(null);
   const maxLevel = data.maxSpeed || 5;
+  const TIME_DIFFERENCE = 10; //in minutes
+
+  // Fetch device status and initial data
   useEffect(() => {
     const deviceStatus = getDeviceStatusFromStorage(data.deviceName);
-    setStatus(deviceStatus?.status ? deviceStatus.status : 'OFFLINE');
-    setCurrentLevel(deviceStatus?.level ? deviceStatus.level : 1);
-    setdebouncedLevel(deviceStatus?.level ? deviceStatus.level : 1);
-    setCheckLevel(deviceStatus?.level ? deviceStatus.level : 1);
-    setLastFetchedAt(deviceStatus
-      ?.lastFetchedAt ? deviceStatus.lastFetchedAt : null);
-    setLoaded(true);
-  }, []);
+    const initialStatus = deviceStatus?.status || DEVICE_STATUS.OFFLINE;
+    const initialLevel = deviceStatus?.level || 1;
 
+    setStatus(initialStatus);
+    setCurrentLevel(initialLevel);
+    setDebouncedLevel(initialLevel);
+    setCheckLevel(initialLevel);
+    setLastFetchedAt(deviceStatus?.lastFetchedAt || null);
+    setLoaded(true);
+  }, [data.deviceName]);
+
+  // Refresh data if last fetched time is outdated
   useEffect(() => {
-    if ((lastFetchedAt === null ) && loaded) {
+    if (
+      (!lastFetchedAt ||
+        isTimeDifferenceExceeded(lastFetchedAt, TIME_DIFFERENCE)) &&
+      loaded
+    ) {
       handleRefresh();
     }
-  }, [lastFetchedAt]);
+  }, [lastFetchedAt, loaded]);
 
+  // Debounce level changes
+  useEffect(() => {
+    if (debouncedLevel > 0 && debouncedLevel !== checkLevel) {
+      const handleLevel = async () => {
+        setLoading(true);
+        try {
+          const updatedLevel = await updateLevel({
+            deviceName: data.deviceName,
+            property: debouncedLevel,
+            propertyVariable: "level",
+            queryVariable: "speed",
+            defaultPropertyValue: 1,
+          });
+          setCurrentLevel(updatedLevel.level);
+          setDebouncedLevel(updatedLevel.level);
+          setCheckLevel(updatedLevel.level);
+          setStatus(updatedLevel.status);
+          setLastFetchedAt(updatedLevel.lastFetchedAt);
+        } catch (error) {
+          console.error("Error updating speed:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-   const resetValues = () => {
-     setStatus("OFFLINE");
-   };
+      handleLevel();
+    }
+  }, [debouncedLevel, checkLevel, data.deviceName]);
+
+  const resetValues = () => {
+    setStatus(DEVICE_STATUS.OFFLINE);
+  };
 
   const handleRefresh = async () => {
+    setLoading(true);
+    resetValues();
     try {
-      setLoading(true);
-      resetValues();
       let deviceStatus = await getDeviceStatus(data.deviceName);
       let deviceLevel;
-      if (deviceStatus["status"] === "ON") {
+      if (deviceStatus["status"] === DEVICE_STATUS.ON) {
         deviceLevel = await getDeviceLevel({
           deviceName: data.deviceName,
           queryVariable: "speed",
@@ -55,133 +97,84 @@ const FanComponent = ({ data }) => {
         });
         setCurrentLevel(deviceLevel["level"]);
         setCheckLevel(deviceLevel["level"]);
-        setdebouncedLevel(deviceLevel["level"]);
+        setDebouncedLevel(deviceLevel["level"]);
       } else {
         deviceLevel = deviceStatus;
       }
-
       setStatus(deviceLevel["status"]);
-
       setLastFetchedAt(deviceLevel["lastFetchedAt"]);
-      setLoading(false);
       return deviceLevel["lastApiRequestStatus"];
     } catch (error) {
-      console.log("Error", error);
+      console.error("Error refreshing device status:", error);
+    } finally {
       setLoading(false);
-      return false;
     }
   };
 
-
   const toggleStatus = async () => {
+    if (status === DEVICE_STATUS.OFFLINE) {
+      return;
+    }
     setLoading(true);
-    let updatedStatus = await toggleDeviceStatus(data.deviceName, status);
-    setStatus(updatedStatus["status"] ? updatedStatus["status"] : "OFFLINE");
-    setLastFetchedAt(
-      updatedStatus["lastFetchedAt"] ? updatedStatus["lastFetchedAt"] : null
-    );
-    setLoading(false);
+    try {
+      const updatedStatus = await toggleDeviceStatus(data.deviceName, status);
+      setStatus(updatedStatus.status || DEVICE_STATUS.OFFLINE);
+      setLastFetchedAt(updatedStatus.lastFetchedAt || null);
+    } catch (error) {
+      console.error("Error toggling status:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLevelChange = (value) => {
-    const speed = value;
-    setCurrentLevel(speed);
+    setCurrentLevel(value);
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-
     debounceTimeoutRef.current = setTimeout(() => {
-      setdebouncedLevel(speed);
+      setDebouncedLevel(value);
     }, 500); // 500ms debounce delay
   };
-
-  useEffect(() => {
-    const updateSpeed = async () => {
-      if (debouncedLevel > 0 && debouncedLevel !== checkLevel) {
-        setLoading(true);
-        const updatedLevel = await updateLevel({
-          deviceName: data.deviceName,
-          property: debouncedLevel,
-          propertyVariable: "level",
-          queryVariable: "speed",
-          defaultPropertyValue: 1,
-        });
-        setCurrentLevel(updatedLevel["level"]);
-        setdebouncedLevel(updatedLevel["level"]);
-        setCheckLevel(updatedLevel["level"]);
-        setStatus(updatedLevel["status"]);
-        setLastFetchedAt(updatedLevel["lastFetchedAt"]);
-        setLoading(false);
-      }
-    };
-
-    updateSpeed();
-  }, [debouncedLevel]);
 
   return (
     <DeviceCard
       title={data.deviceName}
       isLoading={!loaded}
-      status={status}
       onReload={handleRefresh}
-      fetchedAt={lastFetchedAt}
     >
-      <Card.Grid
-        style={{
-          width: "30%",
-        }}
-        hoverable={false}
-      >
+      <Flex gap="small" vertical align="center">
         <div
+          onClick={toggleStatus}
           className={
-            status === "OFFLINE"
+            status === DEVICE_STATUS.OFFLINE
               ? "svg-wrapper fan-offline"
-              : status !== "ON"
+              : status !== DEVICE_STATUS.ON
               ? "svg-wrapper fan-blades stopped"
               : `svg-wrapper fan-blades speed-${currentLevel}`
           }
-        ></div>
-      </Card.Grid>
-      <Card.Grid
-        hoverable={false}
-        style={{
-          width: "70%",
-        }}
-      >
-        <Flex vertical gap="small">
-          <Flex wrap gap="small">
-            <ToggleButton
-              onToggle={toggleStatus}
-              isLoading={loading}
-              status={status}
-            />
-            <Divider type="vertical" style={{ height: "100px" }} />
-            <Flex gap="small" vertical>
-              <Text type="secondary">Speed</Text>
-              <Slider
-                dots={true}
-                style={{
-                  width: "150px",
-                }}
-                min={1}
-                max={parseInt(maxLevel, 10)}
-                keyboard={true}
-                step={1}
-                value={status === "ON" ? currentLevel : null}
-                disabled={status !== "ON" || loading}
-                marks={{
-                  1: "1",
-                  2: "2",
-                  3: "3",
-                  4: "4",
-                  5: "5",
-                }}
-                onChange={handleLevelChange}
-              />
-            </Flex>
-          </Flex>
-        </Flex>
-      </Card.Grid>
+        />
+        <Slider
+          dots={true}
+          style={{
+            width: "150px",
+          }}
+          min={1}
+          max={parseInt(maxLevel, 10)}
+          keyboard={true}
+          step={1}
+          value={status === DEVICE_STATUS.ON ? currentLevel : null}
+          disabled={status !== DEVICE_STATUS.ON || loading}
+          marks={{
+            1: "1",
+            2: "2",
+            3: "3",
+            4: "4",
+            5: "5",
+          }}
+          onChange={handleLevelChange}
+        />
+      </Flex>
     </DeviceCard>
   );
 };

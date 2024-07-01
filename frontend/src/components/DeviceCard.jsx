@@ -1,69 +1,21 @@
-import {
-  CheckCircleFilled,
-  ClockCircleOutlined,
-  ReloadOutlined,
-  StopFilled,
-  WarningFilled,
-} from "@ant-design/icons";
-import { Card, Divider, Tooltip, Typography, message } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+import { Card, Tooltip, message } from "antd";
 import React from "react";
-const { Text } = Typography;
 
 const iconStyle = {
   fontSize: 20,
 };
-const RenderIcon = (status, deviceName) => {
-  let statusText;
-  if (status === "ON") {
-    statusText = `${deviceName} is on`;
-    return (
-      <Tooltip title={statusText}>
-        <CheckCircleFilled
-          style={{
-            ...iconStyle,
-            color: "#4CAF50",
-          }}
-        />
-      </Tooltip>
-    );
-  } else if (status === "OFF") {
-    statusText = `${deviceName} is off`;
-    return (
-      <Tooltip title={statusText}>
-        <StopFilled
-          style={{
-            ...iconStyle,
-            color: "#F44336",
-          }}
-        />
-      </Tooltip>
-    );
-  } else {
-    statusText = `${deviceName} is offline`;
-    return (
-      <Tooltip title={statusText}>
-        <WarningFilled
-          style={{
-            ...iconStyle,
-            color: "#9E9E9E",
-          }}
-        />
-      </Tooltip>
-    );
-  }
-};
-const DeviceCard = ({ title, isLoading, status, onReload, children, fetchedAt }) => {
 
+const DeviceCard = ({ title, isLoading, onReload, children }) => {
   const [messageApi, contextHolder] = message.useMessage();
   return (
     <Card
       title={title}
       bordered={true}
-      hoverable={true}
+      hoverable={false}
       loading={isLoading}
       extra={
         <>
-          {RenderIcon(status, title)}
           {onReload ? (
             <Tooltip title="Refresh">
               {contextHolder}
@@ -103,18 +55,6 @@ const DeviceCard = ({ title, isLoading, status, onReload, children, fetchedAt })
       }
     >
       {children}
-      <Divider>
-        <Tooltip title={"Last fetched time"} placement="bottom">
-          <Text>
-            <ClockCircleOutlined
-              style={{
-                marginRight: "5px",
-              }}
-            />
-          </Text>
-          <Text keyboard>{new Date(fetchedAt).toLocaleString()}</Text>
-        </Tooltip>
-      </Divider>
     </Card>
   );
 };
